@@ -1,19 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+// Home route
 Route::get('/', function () {
-    echo "<h1>Laravel is running!</h1>";
-    echo "<p>Version: " . app()->version() . "</p>";
-    echo "<p>Path: " . base_path() . "</p>";
-    echo "<p>Using namespace: JaravelComponent</p>";
+	return '<h1>Jaravel Home</h1>
+        <ul>
+            <li><a href="'.\Joomla\CMS\Router\Route::_('index.php?option=com_jaravelcomponent&path=about&Itemid=103').'">About (HTML)</a></li>
+        </ul>';
 });
 
-Route::get('/test', function () {
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Jaravel test route working!',
-        'laravel_version' => app()->version(),
-        'namespace' => 'JaravelComponent'
-    ]);
+// About page (HTML response)
+Route::get('/about', function () {
+	return '<h1>About Jaravel</h1><p>Laravel running inside Joomla!</p>';
 });

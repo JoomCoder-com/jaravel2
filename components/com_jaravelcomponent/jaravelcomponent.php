@@ -1,13 +1,18 @@
 <?php
 defined('_JEXEC') or die;
 
+use Illuminate\Http\JsonResponse;
+use Joomla\CMS\Factory;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 // Load Laravel autoloader from library and register component namespace
 $loader = require JPATH_LIBRARIES . '/jaravel/vendor/autoload.php';
-$loader->addPsr4('JaravelComponent\\', JPATH_COMPONENT . '/japp/app');
+$loader->addPsr4('JaravelComponent\\', __DIR__ . '/japp/app');
 
 // Create Laravel app
 $app = new Illuminate\Foundation\Application(
-	JPATH_COMPONENT . '/japp'
+	__DIR__ . '/japp'
 );
 
 // Register services with custom namespace
@@ -26,26 +31,44 @@ $app->singleton(
 	JaravelComponent\Exceptions\Handler::class
 );
 
-// Handle request
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+// Get the path from Joomla input
+$jinput = Joomla\CMS\Factory::getApplication()->input;
+$path = $jinput->get('path', '/', 'STRING');
 
-$response = $kernel->handle(
-	$request = Illuminate\Http\Request::capture()
+// Create a custom request with the correct path
+$server = $_SERVER;
+$server['REQUEST_URI'] = '/' . ltrim($path, '/');
+$server['PATH_INFO'] = '/' . ltrim($path, '/');
+
+// Create request with modified server variables
+$request = Illuminate\Http\Request::create(
+	'/' . ltrim($path, '/'),
+	$_SERVER['REQUEST_METHOD'] ?? 'GET',
+	$_REQUEST,
+	$_COOKIE,
+	$_FILES,
+	$server
 );
 
-// Handle different response types
-if ($response instanceof \Illuminate\Http\JsonResponse) {
-	// For JSON responses, set headers and exit
-	$response->send();
-	$kernel->terminate($request, $response);
-	jexit();
-} elseif ($response instanceof \Symfony\Component\HttpFoundation\BinaryFileResponse) {
-	// For file downloads
-	$response->send();
-	$kernel->terminate($request, $response);
-	jexit();
-} else {
-	// For normal HTML responses, output within Joomla
+// Handle request with custom request object
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+
+ob_start();
+$response = $kernel->handle($request);
+ob_end_clean(); // Discard buffer
+
+// Simple check: Is it HTML or not?
+$contentType = $response->headers->get('Content-Type', 'text/html');
+$isHtml = stripos($contentType, 'text/html') !== false;
+
+if ($isHtml) {
+	// HTML: Output within Joomla
 	echo $response->getContent();
 	$kernel->terminate($request, $response);
+} else {
+	// Everything else: Send directly and exit
+	$response->send();
+	$kernel->terminate($request, $response);
+	jexit();
 }
