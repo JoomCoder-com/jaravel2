@@ -1,0 +1,8 @@
+{
+  "name": "jaravel/component",
+  "autoload": {
+    "psr-4": {
+      "JaravelComponent\\": "app/"
+    }
+  }
+}

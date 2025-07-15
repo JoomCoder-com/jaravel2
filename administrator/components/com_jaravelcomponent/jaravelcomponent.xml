@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="component" method="upgrade">
+    <name>Jaravel Example</name>
+    <author>JoomCoder</author>
+    <creationDate>January 2025</creationDate>
+    <version>1.0.0</version>
+    <description>Jaravel example component</description>
+
+    <!-- Frontend files -->
+    <files folder="site">
+        <filename>jaravelcomponent.php</filename>
+        <folder>japp</folder>
+    </files>
+
+    <!-- Backend/Administrator files -->
+    <administration>
+        <menu>COM_JARAVELCOMPONENT</menu>
+
+        <files folder="admin">
+            <filename>jaravelcomponent.php</filename>
+        </files>
+    </administration>
+</extension>

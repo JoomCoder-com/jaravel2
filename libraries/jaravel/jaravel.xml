@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="library" method="upgrade">
+    <name>Jaravel</name>
+    <libraryname>jaravel</libraryname>
+    <author>JoomCoder</author>
+    <creationDate>2025-01-15</creationDate>
+    <version>1.0.0</version>
+    <description>Laravel integration for Joomla</description>
+    <files>
+        <filename>jaravel.php</filename>
+        <folder>src</folder>
+        <folder>vendor</folder>
+    </files>
+</extension>
