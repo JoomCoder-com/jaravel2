@@ -9,15 +9,39 @@
 // No direct access.
 defined('_JEXEC') or die;
 
-use Jaravel\Helpers\MenuHelper;
-use Joomla\CMS\Factory;
-use Joomla\CMS\Language\Multilanguage;
+use Jaravel\Helpers\RouteHelper;
 
 /**
  * JaravelComponent Route Helper
  */
 class JaravelcomponentHelperRoute
 {
+    /**
+     * Route helper instance
+     */
+    private static $helper = null;
+    
+    /**
+     * View to Laravel path mappings
+     */
+    private static $viewMappings = [
+        'home' => '',           // home view maps to root path
+        'tasks' => 'tasks',     // tasks view maps to tasks path
+        'dashboard' => 'dashboard',
+        'search' => 'search',
+        'admin' => 'admin/stats'
+    ];
+    
+    /**
+     * Get route helper instance
+     */
+    private static function getHelper()
+    {
+        if (self::$helper === null) {
+            self::$helper = new RouteHelper('com_jaravelcomponent', self::$viewMappings);
+        }
+        return self::$helper;
+    }
     /**
      * Get route for Laravel path with proper menu item ID
      *
@@ -28,28 +52,20 @@ class JaravelcomponentHelperRoute
      */
     public static function getRoute($path = '', $params = [], $language = null)
     {
-        $url = 'index.php?option=com_jaravelcomponent';
-        
-        if ($path) {
-            $url .= '&path=' . ltrim($path, '/');
-        }
-        
-        if (!empty($params)) {
-            $url .= '&' . http_build_query($params);
-        }
-        
-        // Find menu item ID
-        $itemId = MenuHelper::findMenuItemId('com_jaravelcomponent', $path, $language);
-        if ($itemId > 0) {
-            $url .= '&Itemid=' . $itemId;
-        }
-        
-        // Add language parameter if multilanguage is enabled
-        if ($language && $language !== '*' && Multilanguage::isEnabled()) {
-            $url .= '&lang=' . $language;
-        }
-        
-        return $url;
+        return self::getHelper()->getRoute($path, $params, $language);
+    }
+    
+    /**
+     * Get route by view name
+     *
+     * @param string $view View name
+     * @param array $params Additional parameters
+     * @param mixed $language Language tag
+     * @return string
+     */
+    public static function getViewRoute($view, $params = [], $language = null)
+    {
+        return self::getHelper()->getViewRoute($view, $params, $language);
     }
     
     /**
@@ -122,15 +138,6 @@ class JaravelcomponentHelperRoute
      */
     public static function hasMenuItemId()
     {
-        $app = Factory::getApplication();
-        $input = $app->input;
-        
-        // Get current path
-        $path = $input->get('path', '', 'string');
-        
-        // Check if there's a menu item for this path
-        $itemId = MenuHelper::findMenuItemId('com_jaravelcomponent', $path);
-        
-        return $itemId > 0;
+        return self::getHelper()->hasMenuItemId();
     }
 }

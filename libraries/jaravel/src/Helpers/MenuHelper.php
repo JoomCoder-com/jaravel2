@@ -37,17 +37,38 @@ class MenuHelper
             $rules[] = ['component' => $component, 'path' => $path];
         }
         
-        // Second priority: parent paths (for nested routes)
+        // Second priority: check view-based menu items
+        // Map common paths to view names
+        $pathToView = [
+            '' => 'home',
+            'tasks' => 'tasks',
+            'dashboard' => 'dashboard',
+            'search' => 'search',
+            'admin/stats' => 'admin'
+        ];
+        
+        if (isset($pathToView[$path])) {
+            $rules[] = ['component' => $component, 'view' => $pathToView[$path]];
+        }
+        
+        // Third priority: parent paths (for nested routes)
         if ($path && strpos($path, '/') !== false) {
             $segments = explode('/', $path);
             while (count($segments) > 1) {
                 array_pop($segments);
-                $rules[] = ['component' => $component, 'path' => implode('/', $segments)];
+                $parentPath = implode('/', $segments);
+                $rules[] = ['component' => $component, 'path' => $parentPath];
+                
+                // Also check view mapping for parent path
+                if (isset($pathToView[$parentPath])) {
+                    $rules[] = ['component' => $component, 'view' => $pathToView[$parentPath]];
+                }
             }
         }
         
-        // Third priority: component home page
+        // Fourth priority: component home page
         $rules[] = ['component' => $component, 'path' => ''];
+        $rules[] = ['component' => $component, 'view' => 'home'];
         
         // Execute rules in order
         foreach ($rules as $rule) {
@@ -97,17 +118,27 @@ class MenuHelper
                 continue;
             }
             
-            // Check path match
-            $menuPath = isset($menu->query['path']) ? $menu->query['path'] : '';
-            
-            // Exact match
-            if ($menuPath == $rule['path']) {
-                return $menu->id;
+            // Check for view-based rule
+            if (isset($rule['view'])) {
+                $menuView = isset($menu->query['view']) ? $menu->query['view'] : '';
+                if ($menuView == $rule['view']) {
+                    return $menu->id;
+                }
             }
             
-            // For component home, accept menu items without path
-            if ($rule['path'] === '' && $menuPath === '') {
-                return $menu->id;
+            // Check for path-based rule
+            if (isset($rule['path'])) {
+                $menuPath = isset($menu->query['path']) ? $menu->query['path'] : '';
+                
+                // Exact match
+                if ($menuPath == $rule['path']) {
+                    return $menu->id;
+                }
+                
+                // For component home, accept menu items without path
+                if ($rule['path'] === '' && $menuPath === '') {
+                    return $menu->id;
+                }
             }
         }
         

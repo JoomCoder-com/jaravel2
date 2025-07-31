@@ -35,7 +35,29 @@ $app->singleton(
 
 // Get the path from Joomla input
 $jinput = Joomla\CMS\Factory::getApplication()->input;
-$path = $jinput->get('path', '/', 'STRING');
+
+// Check for path parameter first
+$path = $jinput->get('path', '', 'STRING');
+
+// If no path, check for view parameter and map it
+if (!$path) {
+    $view = $jinput->get('view', '', 'CMD');
+    
+    // View to Laravel path mappings
+    $viewMappings = [
+        'home' => '',           // home view maps to root path
+        'tasks' => 'tasks',     // tasks view maps to tasks path
+        'dashboard' => 'dashboard',
+        'search' => 'search',
+        'admin' => 'admin/stats'
+    ];
+    
+    // Get path from view mapping or use view name as path
+    $path = isset($viewMappings[$view]) ? $viewMappings[$view] : $view;
+}
+
+// Default to root if still no path
+$path = $path ?: '/';
 
 // Create a custom request with the correct path
 $server = $_SERVER;
