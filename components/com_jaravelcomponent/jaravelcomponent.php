@@ -7,7 +7,9 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 // Load Laravel autoloader from library and register component namespace
-$loader = require JPATH_LIBRARIES . '/jaravel/vendor/autoload.php';
+$loader = require JPATH_LIBRARIES . '/jaravel/vendor/autoload.php'; // laravel 12 + jaravel helper classes
+
+
 $loader->addPsr4('JaravelComponent\\', __DIR__ . '/japp/app');
 
 // Create Laravel app

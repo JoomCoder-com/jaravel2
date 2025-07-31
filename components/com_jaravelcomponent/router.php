@@ -24,6 +24,9 @@ class JaravelcomponentRouter extends RouterBase
             unset($query['path']);
         }
 
+
+		unset($query['view']);
+
         return $segments;
     }
 

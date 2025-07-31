@@ -36,5 +36,6 @@ return [
 
         // Application Service Providers
         JaravelComponent\Providers\RouteServiceProvider::class,
+        Jaravel\Providers\BladeServiceProvider::class,
     ],
 ];

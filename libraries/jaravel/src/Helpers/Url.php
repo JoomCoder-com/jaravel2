@@ -26,6 +26,12 @@ class Url
             $url .= '&' . http_build_query($params);
         }
 
+        // Find menu item ID
+        $itemId = MenuHelper::findMenuItemId($component, $path);
+        if ($itemId > 0) {
+            $url .= '&Itemid=' . $itemId;
+        }
+
         // Use Joomla's Route helper for SEF URLs
         return \Joomla\CMS\Router\Route::_($url);
     }
