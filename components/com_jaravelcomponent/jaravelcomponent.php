@@ -29,7 +29,7 @@ use Jaravel\Bootstrap;
  * - 'tasks' => 'tasks' : Maps to Laravel's /tasks route
  * - 'admin' => 'admin/stats' : Maps to nested route /admin/stats
  */
-$viewMappings = [
+$JoomlaViewMappings = [
     'home' => '',               // Joomla 'home' view → Laravel '/' route
     'tasks' => 'tasks',         // Joomla 'tasks' view → Laravel '/tasks' route
     'dashboard' => 'dashboard', // Joomla 'dashboard' view → Laravel '/dashboard' route
@@ -68,4 +68,4 @@ $bootstrap = new Bootstrap(__DIR__, 'JaravelComponent');
 // $bootstrap->bindService('App\Contracts\Logger', 'App\Services\FileLogger', true);
 
 // Handle the request
-$bootstrap->handleRequest($viewMappings);
+$bootstrap->handleRequest($JoomlaViewMappings);
