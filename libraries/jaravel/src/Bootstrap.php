@@ -102,12 +102,113 @@ class Bootstrap
     }
     
     /**
+     * Automatically detect Joomla views from the views folder
+     * 
+     * @return array List of view names found in the views directory
+     */
+    protected function detectJoomlaViews(): array
+    {
+        $viewsPath = $this->componentPath . '/views';
+        $views = [];
+        
+        if (is_dir($viewsPath)) {
+            $directories = scandir($viewsPath);
+            foreach ($directories as $dir) {
+                // Skip . and .. and any hidden directories
+                if ($dir !== '.' && $dir !== '..' && !str_starts_with($dir, '.')) {
+                    $viewPath = $viewsPath . '/' . $dir;
+                    if (is_dir($viewPath)) {
+                        $views[] = $dir;
+                    }
+                }
+            }
+        }
+        
+        return $views;
+    }
+    
+    /**
+     * Get Laravel routes from the web.php file
+     * 
+     * @return array List of route paths defined in Laravel
+     */
+    protected function getLaravelRoutes(): array
+    {
+        $routesFile = $this->componentPath . '/japp/routes/web.php';
+        $routes = [];
+        
+        if (file_exists($routesFile)) {
+            // Parse the routes file to extract route paths
+            $content = file_get_contents($routesFile);
+            
+            // Match Route::get/post/put/delete patterns
+            preg_match_all('/Route::(get|post|put|delete|any)\s*\(\s*[\'"]\/([^\'"\s]*)[\'"]/', $content, $matches);
+            
+            if (!empty($matches[2])) {
+                foreach ($matches[2] as $route) {
+                    // Remove route parameters for matching
+                    $cleanRoute = preg_replace('/\{[^}]+\}/', '', $route);
+                    $cleanRoute = trim($cleanRoute, '/');
+                    if ($cleanRoute !== '') {
+                        $routes[] = $cleanRoute;
+                    }
+                }
+            }
+        }
+        
+        return array_unique($routes);
+    }
+    
+    /**
+     * Build automatic view to route mappings
+     * 
+     * @param array $customMappings Optional custom mappings to override automatic ones
+     * @return array Complete view to route mappings
+     */
+    protected function buildViewMappings(array $customMappings = []): array
+    {
+        $mappings = [];
+        
+        // Detect Joomla views
+        $joomlaViews = $this->detectJoomlaViews();
+        
+        // Get Laravel routes for validation
+        $laravelRoutes = $this->getLaravelRoutes();
+        
+        // Build automatic mappings
+        foreach ($joomlaViews as $view) {
+            // Special cases for home and default views
+            if ($view === 'home' || $view === 'default') {
+                $mappings[$view] = '';
+            } else {
+                // Map view to route with same name if it exists
+                if (in_array($view, $laravelRoutes)) {
+                    $mappings[$view] = $view;
+                } else {
+                    // Still map it - route might be defined with parameters or dynamically
+                    $mappings[$view] = $view;
+                }
+            }
+        }
+        
+        // Apply custom mappings (these override automatic mappings)
+        foreach ($customMappings as $view => $route) {
+            $mappings[$view] = $route;
+        }
+        
+        return $mappings;
+    }
+    
+    /**
      * Handle the incoming request from Joomla and route it to Laravel
      * 
-     * @param array $viewMappings Optional mappings from Joomla views to Laravel routes
+     * @param array $customMappings Optional custom mappings to override automatic detection
      */
-    public function handleRequest(array $viewMappings = []): void
+    public function handleRequest(array $customMappings = []): void
     {
+        // Build complete view mappings with automatic detection and custom overrides
+        $viewMappings = $this->buildViewMappings($customMappings);
+        
         // Get Joomla input
         $jinput = Factory::getApplication()->input;
         
@@ -117,8 +218,19 @@ class Bootstrap
         // If no path, check for view parameter and map it
         if (!$path) {
             $view = $jinput->get('view', '', 'CMD');
-            // Use view mapping if defined, otherwise use view name as path
-            $path = isset($viewMappings[$view]) ? $viewMappings[$view] : $view;
+            
+            // Use the mapping (automatic or custom)
+            if (isset($viewMappings[$view])) {
+                $path = $viewMappings[$view];
+            } else {
+                // Fallback: handle unmapped views
+                if ($view === 'home' || $view === 'default' || !$view) {
+                    $path = '';
+                } else {
+                    // Use view name as path for any unmapped views
+                    $path = $view;
+                }
+            }
         }
         
         // Default to root path if still empty
